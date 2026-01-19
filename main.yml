@@ -23,7 +23,7 @@
 
   tasks:
     # uninstall IIS if already present to ensure idempotency
-    - name: "Uninstall IIS if already present"
+    - name: "Package : Uninstall IIS if already present"
       ansible.windows.win_feature:
         name: Web-Server
         state: absent
