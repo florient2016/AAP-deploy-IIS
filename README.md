@@ -34,6 +34,3 @@ Target hosts must match the group pattern: `dept_finance:&env_dev:&windows`
 ## Validation
 The playbook performs a local HTTP GET request to verify successful deployment.
 
-## Notes
-- Reboot tasks are commented out; uncomment if required in your environment
-- Default page includes French language support
