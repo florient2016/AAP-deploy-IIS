@@ -1,6 +1,6 @@
 ---
 - name: "For Production - Deploy IIS on Finance DEV Windows servers"
-  hosts: "dept_finance:&env_dev:&windows"
+  hosts: "dept_finance:env_dev:windows"
   gather_facts: false
 
   vars:
