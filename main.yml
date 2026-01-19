@@ -1,0 +1,96 @@
+---
+- name: "For Production - Deploy IIS on Finance DEV Windows servers"
+  hosts: "dept_finance:&env_dev:&windows"
+  gather_facts: false
+
+  vars:
+    iis_features:
+      - Web-Server
+      - Web-WebServer
+      - Web-Common-Http
+      - Web-Default-Doc
+      - Web-Static-Content
+      - Web-Http-Errors
+      - Web-Http-Logging
+      - Web-Log-Libraries
+      - Web-Request-Monitor
+      - Web-Filtering
+      - Web-Performance
+      - Web-Stat-Compression
+      - Web-Security
+
+    iis_root: "C:\\inetpub\\wwwroot"
+    iis_index: "C:\\inetpub\\wwwroot\\index.html"
+
+  tasks:
+    # uninstall IIS if already present to ensure idempotency
+    - name: "Uninstall IIS if already present"
+      ansible.windows.win_feature:
+        name: Web-Server
+        state: absent
+        include_sub_features: true
+        include_management_tools: true
+      register: uninstall_iis
+
+    #- name: "Reboot if required after IIS uninstall"
+    #  ansible.windows.win_reboot:
+    #    msg: "Reboot after IIS uninstall"
+    #    reboot_timeout: 1800
+    #  when: uninstall_iis.reboot_required | default(false)
+
+    # install IIS features defined in vars
+    - name: "Install IIS features"
+      ansible.windows.win_feature:
+        name: "{{ iis_features }}"
+        state: present
+        include_management_tools: true
+      register: install_iis
+
+    - #name: "Reboot if required after IIS install"
+      #ansible.windows.win_reboot:
+      #  msg: "Reboot after IIS install"
+      #  reboot_timeout: 1800
+      #when: install_iis.reboot_required | default(false)
+
+    # Ensure IIS root folder exists and deploy a default static page
+    - name: "Ensure IIS root folder exists"
+      ansible.windows.win_file:
+        path: "{{ iis_root }}"
+        state: directory
+
+    - name: "Deploy default static page"
+      ansible.windows.win_copy:
+        dest: "{{ iis_index }}"
+        content: |
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>ITSSolutions - Finance DEV</title>
+          </head>
+          <body>
+            <h1>ITSSolutions - Finance DEV</h1>
+            <p>IIS est déployé avec succès via Ansible Automation Platform.</p>
+            <p>Departement: finance (Environement DEV)/p>
+          </body>
+          </html>
+
+    # Ensure W3SVC service is running automatically
+    - name: "Ensure World Wide Web Publishing Service (W3SVC) is running"
+      ansible.windows.win_service:
+        name: W3SVC
+        state: started
+        start_mode: auto
+
+    - name: "Validation - Check HTTP locally on port 80"
+      ansible.windows.win_uri:
+        url: "http://localhost/"
+        method: GET
+        return_content: false
+        status_code: 200
+      register: http_check
+
+    - name: "Show validation result"
+      ansible.builtin.debug:
+        msg: "IIS OK on {{ inventory_hostname }} (HTTP status={{ http_check.status_code }})"
