@@ -27,9 +27,9 @@
       ansible.windows.win_feature:
         name: Web-Server
         state: absent
-        include_sub_features: true
-        include_management_tools: true
-      register: uninstall_iis
+      #  include_sub_features: true
+      #  include_management_tools: true
+      #register: uninstall_iis
 
     #- name: "Reboot if required after IIS uninstall"
     #  ansible.windows.win_reboot:
