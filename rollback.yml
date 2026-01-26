@@ -1,0 +1,40 @@
+---
+- name: Rollback IIS Deployment
+  hosts: "dept_finance:&env_dev:&windows"
+  gather_facts: false
+  tasks:
+    - name: Stop IIS service
+      ansible.windows.win_service:
+        name: W3SVC
+        state: stopped
+
+    - name: Remove deployed application files
+      ansible.windows.win_file:
+        path: "C:\\inetpub\\wwwroot\\index.html"
+        state: absent 
+
+    - name: Uninstall IIS features
+      ansible.windows.win_feature: 
+        name:
+          - Web-Server
+          - Web-WebServer
+          - Web-Common-Http
+          - Web-Default-Doc
+          - Web-Static-Content
+          - Web-Http-Errors
+          - Web-Http-Logging
+          - Web-Log-Libraries
+          - Web-Request-Monitor
+          - Web-Filtering
+          - Web-Performance
+          - Web-Stat-Compression
+          - Web-Security
+        state: absent
+      register: uninstall_iis
+
+    - name: Reboot if required after IIS uninstall
+      ansible.windows.win_reboot:
+        msg: "Reboot after IIS uninstall"
+        reboot_timeout: 1800
+      when: uninstall_iis.reboot_required | default(false)
+     
