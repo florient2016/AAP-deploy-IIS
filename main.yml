@@ -85,7 +85,7 @@
 
     - name: "Validation - Check HTTP locally on port 80"
       ansible.windows.win_uri:
-        url: "http://localhost/"
+        url: "http://{{ inventory_hostname }}/"
         method: GET
         return_content: false
         status_code: 200
